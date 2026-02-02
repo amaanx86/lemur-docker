@@ -1,5 +1,5 @@
 #############  BUILDER  #############
-FROM ubuntu:20.04 as builder
+FROM ubuntu:22.04 as builder
 LABEL maintainer="Netflix Open Source Development <talent@netflix.com>"
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -12,8 +12,13 @@ WORKDIR /opt/lemur
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends upgrade && \
-    apt-get install -y --no-install-recommends libpq-dev curl build-essential locales libffi-dev libsasl2-dev libldap2-dev \
-        dh-autoreconf git python3-dev python3-pip python3-venv python3-wheel nodejs npm && \
+    apt-get install -y --no-install-recommends curl ca-certificates gnupg && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends libpq-dev build-essential locales libffi-dev libsasl2-dev libldap2-dev \
+        dh-autoreconf git python3-dev python3-pip python3-venv python3-wheel nodejs && \
     locale-gen en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && \
     npm config set registry https://registry.npmjs.org/ && \
     npm install npm -g && \
@@ -30,7 +35,7 @@ RUN apt-get update && \
     python3 -c 'print(" \033[32m BUILDER DONE \033[0m ")'
 
 #############  APP  #############
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 LABEL maintainer="Netflix Open Source Development <talent@netflix.com>"
 
 ARG DEBIAN_FRONTEND=noninteractive
